@@ -47,8 +47,6 @@ cd timeSeriesEventEmitter
 docker-compose up --build
 ```
 
-2. Access the endpoints using the default port (e.g., http://localhost:5000). Modify the configuration in the `docker-compose.yml` file if needed.
-
 #### Database Initialization (First-Time Setup)
 
 1. Start an interactive shell inside the Flask application container:
