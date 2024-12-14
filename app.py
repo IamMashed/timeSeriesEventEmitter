@@ -31,27 +31,27 @@ def stream():
     """
     Event Stream endpoint that emits time-series data continuously.
     """
-
     def generate_events():
-        while True:
-            # Create a random metric as an example
-            event = {
-                'timestamp': datetime.utcnow().isoformat() + 'Z',
-                'metric': 'temperature',  # Example metric
-                'value': round(random.uniform(20.0, 30.0), 2)
-            }
-            # Emit event to the client
-            yield f"data: {json.dumps(event)}\n\n"
-            # Store the event in the database
-            new_event = Event(
-                timestamp=datetime.utcnow(),
-                metric=event['metric'],
-                value=event['value']
-            )
-            db.session.add(new_event)
-            db.session.commit()
-            # Wait for the specified interval
-            time.sleep(current_interval)
+        with app.app_context():  # Make sure to push the application context here
+            while True:
+                # Create a random metric as an example
+                event = {
+                    'timestamp': datetime.utcnow().isoformat() + 'Z',
+                    'metric': 'temperature',  # Example metric
+                    'value': round(random.uniform(20.0, 30.0), 2)
+                }
+                # Emit event to the client
+                yield f"data: {json.dumps(event)}\n\n"
+                # Store the event in the database
+                new_event = Event(
+                    timestamp=datetime.utcnow(),
+                    metric=event['metric'],
+                    value=event['value']
+                )
+                db.session.add(new_event)
+                db.session.commit()
+                # Wait for the specified interval
+                time.sleep(current_interval)
 
     return Response(generate_events(), content_type='text/event-stream')
 
@@ -63,7 +63,7 @@ def history():
     """
     n = request.args.get('n', default=10, type=int)  # Default to 10 events
     events = Event.query.order_by(Event.id.desc()).limit(n).all()
-    # Convert event objects to dictionaries
+    # TODO: Rework db query to avoid converting event objects to dictionaries
     events_list = [{
         "timestamp": event.timestamp.isoformat() + 'Z',
         "metric": event.metric,
@@ -72,17 +72,15 @@ def history():
     return jsonify(events_list)
 
 
-@app.route('/set_interval')
+@app.route('/set_interval', methods=['POST'])
 def set_interval():
-    """
-    Set the interval for event emission.
-    """
     global current_interval
-    interval = request.args.get('interval', default=5, type=int)  # Default to 5 seconds
-    if interval < 1:
-        return jsonify({'error': 'Interval must be at least 1 second'}), 400
-    current_interval = interval
-    return jsonify({'message': f'Interval set to {interval} seconds'})
+    data = request.get_json()
+    if data and "interval" in data:
+        current_interval = data["interval"]
+        return jsonify({"message": f"Interval set to {current_interval} seconds"}), 200
+    else:
+        return jsonify({"error": "Invalid payload"}), 400
 
 
 if __name__ == '__main__':

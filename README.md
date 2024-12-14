@@ -86,7 +86,7 @@ curl http://localhost:5000/history?count=10
 3. **`/set_interval`**:
    - Changes the interval for time-series event generation. Example usage:
 ```shell script
-curl -X POST http://localhost:5000/set_interval -d '{"interval": 5}'
+curl -X POST http://localhost:5000/set_interval -H "Content-Type: application/json" -d '{"interval": 1}'
 ```
 
 ---
