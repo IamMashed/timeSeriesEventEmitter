@@ -53,7 +53,7 @@ docker-compose up --build
 
 1. Start an interactive shell inside the Flask application container:
 ```shell script
-docker exec -it <container-name> flask shell
+docker exec -it flask_app flask shell
 ```
 
 2. Initialize the database:
